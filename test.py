@@ -7,7 +7,7 @@ from cvzone.HandTrackingModule import HandDetector
 cap = cv2.VideoCapture(0)
 detector = HandDetector(detectionCon=0.8)
 dest_colors = [(50, 168, 82), (50, 115, 168), (87, 50, 168), (168, 50, 150), ]
-dest_coords = [(100+120*x, 350) for x in range(4)]
+dest_coords = [(100+120*x, 250) for x in range(4)]
 
 def read_images(dir_path):
     img_list = {}
@@ -22,8 +22,16 @@ def read_images(dir_path):
 
 def draw_img(cam_frame, img, x, y):
     w, h = img.shape[:2]
-    cam_frame[y:y + h, x:x + w] = img
+    if x>-1 and y>-1:
+        cam_frame[y:y + h, x:x + w] = img
+
+    # print(cam_frame.shape, img.shape, x, y, w, h)
     return cam_frame
+def set_rank(pic_obj ,some_pts):
+    pics=pic_obj.copy()
+    pics.sort(reverse = False, key=lambda x: x.value)
+    for i, pic in enumerate(pics):
+        pic.set_rank(i , some_pts)
 
 
 class Piece:
@@ -33,17 +41,24 @@ class Piece:
         self.pos = pos
         self.value = value
         self.rank = None
+        self.final_pos = None
 
-
+    def set_dest(self, dest_pts):
+        self.final_pos = dest_pts[self.rank-1]
     def update_pos(self, new_pos):
+
         w, h = self.img.shape[:2]
         x, y = self.pos
+        if abs(self.final_pos[0]-new_pos[0])<20 and abs(self.final_pos[1]-new_pos[1])<20:
+            self.pos = self.final_pos[0], self.final_pos[1]
+        else:
+            if x < new_pos[0] < x + w and y < new_pos[1] < y + h:
+                self.pos = new_pos[0] - w // 2, new_pos[1] - h // 2
 
-        if x < new_pos[0] < x+w and y < new_pos[1] < y+h:
-            self.pos = new_pos[0]-w//2, new_pos[1]-h//2
+    def set_rank(self, r, dest_pts):
+        self.rank = r + 1
+        self.set_dest(dest_pts)
 
-    def set_rank(self, pics):
-        self.rank = pics.index(self) + 1
 
 
 images = read_images("{}\\images".format(os.getcwd()))
@@ -53,10 +68,10 @@ pieces = []
 
 for i in range(4):
     pieces.append(Piece(images[image_list[i]], (0+(100*i), 0), image_list[i]))
-for piece in pieces:
-    piece.set_rank(pieces)
 
-print([piece.rank for piece in pieces])
+set_rank(pieces, dest_coords)
+
+print([piece.final_pos for piece in pieces])
 while True:
     ret, frame = cap.read()
     frame = cv2.flip(frame, 1)
