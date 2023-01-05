@@ -55,10 +55,8 @@ class Piece:
                 self.pos = self.final_pos[0], self.final_pos[1]
             else:
                 self.pos = new_pos[0] - w // 2, new_pos[1] - h // 2
-        if abs(self.final_pos[0]-new_pos[0]) < 20 and abs(self.final_pos[1]-new_pos[1]) < 20:
-            self.reached=True
-
-
+        if abs(self.final_pos[0]-self.pos[0]) < 20 and abs(self.final_pos[1]-self.pos[1]) < 20:
+            self.reached = True
 
     def set_rank(self, r, dest_pts):
         self.rank = r
@@ -82,7 +80,7 @@ while True:
     frame = cv2.flip(frame, 1)
 
     # hands, frame = detector.findHands(frame, draw=True)  # drawing all the hand points
-    hands= detector.findHands(frame, draw=False)
+    hands = detector.findHands(frame, draw=False)
     if hands:
         lmList = hands[0]['lmList']
         l, _ = detector.findDistance((lmList[8][0], lmList[8][1]), (lmList[12][0], lmList[12][1]))
@@ -91,9 +89,13 @@ while True:
             index_position = lmList[8][:2]
             for piece in pieces:
                 piece.update_pos(index_position)
-
+    done = 0
     for piece in pieces:
         frame = draw_img(frame, piece.img, piece.pos[0], piece.pos[1])
+        if piece.reached:
+            done+=1
+
+
 
     for x, color in zip(dest_coords, dest_colors):
         cv2.circle(frame, x, 5, color, 4)
