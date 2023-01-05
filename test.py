@@ -29,9 +29,9 @@ def draw_img(cam_frame, img, x, y):
     return cam_frame
 def set_rank(pic_obj ,some_pts):
     pics=pic_obj.copy()
-    pics.sort(reverse = False, key=lambda x: x.value)
+    pics.sort(reverse=False, key=lambda x: x.value)
     for i, pic in enumerate(pics):
-        pic.set_rank(i , some_pts)
+        pic.set_rank(i, some_pts)
 
 
 class Piece:
@@ -42,21 +42,26 @@ class Piece:
         self.value = value
         self.rank = None
         self.final_pos = None
+        self.reached=False
 
     def set_dest(self, dest_pts):
-        self.final_pos = dest_pts[self.rank-1]
+        self.final_pos = dest_pts[self.rank]
     def update_pos(self, new_pos):
 
         w, h = self.img.shape[:2]
         x, y = self.pos
-        if abs(self.final_pos[0]-new_pos[0])<20 and abs(self.final_pos[1]-new_pos[1])<20:
-            self.pos = self.final_pos[0], self.final_pos[1]
-        else:
-            if x < new_pos[0] < x + w and y < new_pos[1] < y + h:
+        if x < new_pos[0] < x + w and y < new_pos[1] < y + h:
+            if self.reached:
+                self.pos = self.final_pos[0], self.final_pos[1]
+            else:
                 self.pos = new_pos[0] - w // 2, new_pos[1] - h // 2
+        if abs(self.final_pos[0]-new_pos[0]) < 20 and abs(self.final_pos[1]-new_pos[1]) < 20:
+            self.reached=True
+
+
 
     def set_rank(self, r, dest_pts):
-        self.rank = r + 1
+        self.rank = r
         self.set_dest(dest_pts)
 
 
