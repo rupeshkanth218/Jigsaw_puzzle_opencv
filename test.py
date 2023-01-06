@@ -3,12 +3,15 @@ import os
 import numpy as np
 import random
 from cvzone.HandTrackingModule import HandDetector
+import time
 
 cap = cv2.VideoCapture(0)
 detector = HandDetector(detectionCon=0.8)
 dest_colors = [(50, 168, 82), (50, 115, 168), (87, 50, 168), (168, 50, 150), ]
 dest_coords = [(100+120*x, 250) for x in range(4)]
 
+start_img = cv2.imread("start.png")
+end_img = cv2.imread("end.png")
 def read_images(dir_path):
     img_list = {}
     files = os.listdir(dir_path)
@@ -73,8 +76,9 @@ for i in range(4):
     pieces.append(Piece(images[image_list[i]], (0+(100*i), 0), image_list[i]))
 
 set_rank(pieces, dest_coords)
+cv2.imshow("Webcam",start_img)
+cv2.waitKey(5000)
 
-print([piece.final_pos for piece in pieces])
 while True:
     ret, frame = cap.read()
     frame = cv2.flip(frame, 1)
@@ -93,8 +97,7 @@ while True:
     for piece in pieces:
         frame = draw_img(frame, piece.img, piece.pos[0], piece.pos[1])
         if piece.reached:
-            done+=1
-
+            done += 1
 
 
     for x, color in zip(dest_coords, dest_colors):
@@ -102,6 +105,11 @@ while True:
     cv2.imshow('Webcam', frame)
 
     if cv2.waitKey(1) == ord('q'):
+        break
+    if done == 4:
+        cv2.waitKey(500)
+        cv2.imshow("Webcam", end_img)
+        cv2.waitKey(5000)
         break
 
 cap.release()
